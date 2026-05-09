@@ -103,6 +103,7 @@ docstring-code-format = true
 [tool.pyright]
 
 include = ["source", "scripts"]
+
 exclude = [
     "**/__pycache__",
     "**/_isaac_sim",
@@ -110,6 +111,23 @@ exclude = [
     "**/logs",
     ".git",
     ".vscode",
+    "**/node_modules",  
+    "**/.*"            
+]
+
+extraPaths = [
+
+    "/home/nbowan/workplace/stu02/source/go2",
+    
+    "/home/nbowan/IsaacLab/source/isaaclab", 
+    "/home/nbowan/IsaacLab/source/isaaclab_assets",
+    "/home/nbowan/IsaacLab/source/isaaclab_rl",
+    "/home/nbowan/IsaacLab/source/isaaclab_tasks",
+    # 根据需要向里面添加补全的包
+    
+    "/home/nbowan/miniconda3/envs/isaaclab/lib/python3.11/site-packages/extscache/omni.kit.*",
+    "/home/nbowan/miniconda3/envs/isaaclab/lib/python3.11/site-packages/extscache/omni.graph.*",
+    "/home/nbowan/miniconda3/envs/isaaclab/lib/python3.11/site-packages/extscache/omni.services.*"
 ]
 
 typeCheckingMode = "basic"

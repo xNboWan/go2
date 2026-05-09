@@ -1,3 +1,6 @@
+# Copyright (c) 2024-2026 Ziqi Fan
+# SPDX-License-Identifier: Apache-2.0
+
 # Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
 # All rights reserved.
 #
@@ -34,6 +37,7 @@ parser.add_argument(
     help="Use the pre-trained checkpoint from Nucleus.",
 )
 parser.add_argument("--real-time", action="store_true", default=False, help="Run in real-time, if possible.")
+parser.add_argument("--keyboard", action="store_true", default=False, help="Whether to use keyboard.")
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
@@ -68,6 +72,7 @@ import gymnasium as gym
 import torch
 from rsl_rl.runners import DistillationRunner, OnPolicyRunner
 
+from isaaclab.devices import Se2Keyboard, Se2KeyboardCfg
 from isaaclab.envs import (
     DirectMARLEnv,
     DirectMARLEnvCfg,
@@ -75,6 +80,7 @@ from isaaclab.envs import (
     ManagerBasedRLEnvCfg,
     multi_agent_to_single_agent,
 )
+from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.utils.assets import retrieve_file_path
 from isaaclab.utils.dict import print_dict
 
@@ -87,11 +93,15 @@ from isaaclab_rl.rsl_rl import (
 )
 from isaaclab_rl.utils.pretrained_checkpoint import get_published_pretrained_checkpoint
 
-import isaaclab_tasks  # noqa: F401
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
-import go2.tasks  # noqa: F401
+import robot_lab.tasks  # noqa: F401  # isort: skip
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from rl_utils import camera_follow
+
+# PLACEHOLDER: Extension template (do not remove this comment)
 
 
 @hydra_task_config(args_cli.task, args_cli.agent)
@@ -99,11 +109,10 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     """Play with RSL-RL agent."""
     # grab task name for checkpoint path
     task_name = args_cli.task.split(":")[-1]
-    train_task_name = task_name.replace("-Play", "")
 
     # override configurations with non-hydra CLI arguments
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
-    env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
+    env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else 64
 
     # handle deprecated configurations
     agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, installed_version)
@@ -113,12 +122,42 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     env_cfg.seed = agent_cfg.seed
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
 
+    # spawn the robot randomly in the grid (instead of their terrain levels)
+    env_cfg.scene.terrain.max_init_terrain_level = None
+    # reduce the number of terrains to save memory
+    if env_cfg.scene.terrain.terrain_generator is not None:
+        env_cfg.scene.terrain.terrain_generator.num_rows = 5
+        env_cfg.scene.terrain.terrain_generator.num_cols = 5
+        env_cfg.scene.terrain.terrain_generator.curriculum = False
+
+    # disable randomization for play
+    env_cfg.observations.policy.enable_corruption = False
+    # remove random pushing
+    env_cfg.events.randomize_apply_external_force_torque = None
+    env_cfg.events.push_robot = None
+    env_cfg.curriculum.command_levels_lin_vel = None
+    env_cfg.curriculum.command_levels_ang_vel = None
+
+    if args_cli.keyboard:
+        env_cfg.scene.num_envs = 1
+        env_cfg.terminations.time_out = None
+        env_cfg.commands.base_velocity.debug_vis = False
+        config = Se2KeyboardCfg(
+            v_x_sensitivity=env_cfg.commands.base_velocity.ranges.lin_vel_x[1],
+            v_y_sensitivity=env_cfg.commands.base_velocity.ranges.lin_vel_y[1],
+            omega_z_sensitivity=env_cfg.commands.base_velocity.ranges.ang_vel_z[1],
+        )
+        controller = Se2Keyboard(config)
+        env_cfg.observations.policy.velocity_commands = ObsTerm(
+            func=lambda env: torch.tensor(controller.advance(), dtype=torch.float32).unsqueeze(0).to(env.device),
+        )
+
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Loading experiment from directory: {log_root_path}")
     if args_cli.use_pretrained_checkpoint:
-        resume_path = get_published_pretrained_checkpoint("rsl_rl", train_task_name)
+        resume_path = get_published_pretrained_checkpoint("rsl_rl", task_name)
         if not resume_path:
             print("[INFO] Unfortunately a pre-trained checkpoint is currently unavailable for this task.")
             return
@@ -217,6 +256,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             # Exit the play loop after recording one video
             if timestep == args_cli.video_length:
                 break
+
+        if args_cli.keyboard:
+            camera_follow(env)
 
         # time delay for real-time evaluation
         sleep_time = dt - (time.time() - start_time)
