@@ -3,7 +3,7 @@
 
 from isaaclab.utils import configclass
 
-from velocity.velocity_env_cfg import LocomotionVelocityRoughEnvCfg
+from ..velocity.velocity_env_cfg import LocomotionVelocityRoughEnvCfg
 
 ##
 # Pre-defined configs

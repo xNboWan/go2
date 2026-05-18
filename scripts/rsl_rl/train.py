@@ -102,7 +102,7 @@ from isaaclab_rl.rsl_rl import RslRlBaseRunnerCfg, RslRlVecEnvWrapper, handle_de
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
-import robot_lab.tasks  # noqa: F401  # isort: skip
+import go2.tasks  # noqa: F401  # isort: skip
 
 # import logger
 logger = logging.getLogger(__name__)

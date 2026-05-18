@@ -11,7 +11,7 @@ import torch
 from isaaclab.managers import CommandTerm, CommandTermCfg
 from isaaclab.utils import configclass
 
-import mdp
+from .. import mdp
 
 from .utils import is_robot_on_terrain
 
