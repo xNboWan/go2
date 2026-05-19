@@ -1,4 +1,4 @@
-# Template for Isaac Lab Projects
+# Train Your Unitree Go2 Using RL
 
 ## Overview
 
