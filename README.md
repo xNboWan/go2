@@ -1,135 +1,185 @@
-# Train Your Unitree Go2 Using RL
+---
 
-## Overview
+# Unitree Go2 RL Training with Isaac Lab
 
-This project/repository serves as a template for building projects or extensions based on Isaac Lab.
-It allows you to develop in an isolated environment, outside of the core Isaac Lab repository.
+[![Isaac Lab](https://img.shields.io/badge/Powered%20by-Isaac%20Lab-blue.svg)](https://isaac-sim.github.io/IsaacLab/)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-**Key Features:**
+A standalone repository and template for training the Unitree Go2 quadruped robot using reinforcement learning based on **Isaac Lab**. This project allows you to develop in an isolated environment, outside of the core Isaac Lab repository, while leveraging its powerful simulation capabilities.
 
-- `Isolation` Work outside the core Isaac Lab repository, ensuring that your development efforts remain self-contained.
-- `Flexibility` This template is set up to allow your code to be run as an extension in Omniverse.
+## 🌟 Features
+- **Out-of-Tree Extension:** Clean and isolated development environment based on Isaac Lab.
+- **Reinforcement Learning:** Integrated with `rsl_rl` for fast PPO training.
+- **Sim-to-Sim Verification:** MuJoCo deployment scripts to verify trained policies outside of Isaac Sim.
 
-**Keywords:** extension, template, isaaclab
+---
 
-## Installation
+## 🛠️ Installation
 
-- Install Isaac Lab by following the [installation guide](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html).
-  We recommend using the conda or uv installation as it simplifies calling Python scripts from the terminal.
+### 1. Prerequisites
+Install Isaac Lab by following their [official installation guide](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html). We highly recommend using a `conda` or `uv` virtual environment, as it simplifies calling Python scripts from the terminal.
 
-- Clone or copy this project/repository separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
+### 2. Clone the Repository
+Clone this repository separately from your Isaac Lab installation (i.e., outside the `IsaacLab` directory):
 
-- Using a python interpreter that has Isaac Lab installed, install the library in editable mode using:
+```bash
+git clone https://github.com/xNboWan/go2.git
+cd go2
 
-    ```bash
-    # use 'PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-    python -m pip install -e source/go2
+```
 
-- Verify that the extension is correctly installed by:
+### 3. Install the Extension
 
-    - Listing the available tasks:
+Using the Python interpreter that has Isaac Lab installed, install this library in editable mode:
 
-        Note: It the task name changes, it may be necessary to update the search pattern `"Template-"`
-        (in the `scripts/list_envs.py` file) so that it can be listed.
+```bash
+# Note: Use 'isaaclab.sh -p' instead of 'python' if Isaac Lab is not installed in a Python venv or conda env.
+python -m pip install -e source/go2
 
-        ```bash
-        # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-        python scripts/list_envs.py
-        ```
+```
 
-    - Running a task:
+### 4. Verify Installation
 
-        ```bash
-        # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-        python scripts/<RL_LIBRARY>/train.py --task=<TASK_NAME>
-        ```
+Check if the environments are correctly registered by listing available tasks:
 
-    - Running a task with dummy agents:
+```bash
+python scripts/list_envs.py
 
-        These include dummy agents that output zero or random agents. They are useful to ensure that the environments are configured correctly.
+```
 
-        - Zero-action agent
+*(Note: If your task name changes in the future, you may need to update the search pattern in `scripts/list_envs.py` so it appears in the list.)*
 
-            ```bash
-            # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-            python scripts/zero_agent.py --task=<TASK_NAME>
-            ```
-        - Random-action agent
+---
 
-            ```bash
-            # use 'FULL_PATH_TO_isaaclab.sh|bat -p' instead of 'python' if Isaac Lab is not installed in Python venv or conda
-            python scripts/random_agent.py --task=<TASK_NAME>
-            ```
+## 🚀 Usage
 
-### Set up IDE (Optional)
+### Training and Playing (`rsl_rl`)
 
-To setup the IDE, please follow these instructions:
+To train the Go2 robot, run the training script and specify your target task name:
 
-- Run VSCode Tasks, by pressing `Ctrl+Shift+P`, selecting `Tasks: Run Task` and running the `setup_python_env` in the drop down menu.
-  When running this task, you will be prompted to add the absolute path to your Isaac Sim installation.
+```bash
+python scripts/rsl_rl/train.py --task=<TASK_NAME>
 
-If everything executes correctly, it should create a file .python.env in the `.vscode` directory.
-The file contains the python paths to all the extensions provided by Isaac Sim and Omniverse.
-This helps in indexing all the python modules for intelligent suggestions while writing code.
+```
 
-### Setup as Omniverse Extension (Optional)
+To play/evaluate a trained policy:
 
-We provide an example UI extension that will load upon enabling your extension defined in `source/go2/go2/ui_extension_example.py`.
+```bash
+python scripts/rsl_rl/play.py --task=<TASK_NAME>
 
-To enable your extension, follow these steps:
+```
 
-1. **Add the search path of this project/repository** to the extension manager:
-    - Navigate to the extension manager using `Window` -> `Extensions`.
-    - Click on the **Hamburger Icon**, then go to `Settings`.
-    - In the `Extension Search Paths`, enter the absolute path to the `source` directory of this project/repository.
-    - If not already present, in the `Extension Search Paths`, enter the path that leads to Isaac Lab's extension directory directory (`IsaacLab/source`)
-    - Click on the **Hamburger Icon**, then click `Refresh`.
+### Debugging with Dummy Agents
 
-2. **Search and enable your extension**:
-    - Find your extension under the `Third Party` category.
-    - Toggle it to enable your extension.
+You can run tasks with dummy agents to ensure your environments and observations are configured correctly before running full RL training:
 
-## Code formatting
+* **Zero-action agent:**
+```bash
+python scripts/zero_agent.py --task=<TASK_NAME>
 
-We have a pre-commit template to automatically format your code.
-To install pre-commit:
+```
+
+
+* **Random-action agent:**
+```bash
+python scripts/random_agent.py --task=<TASK_NAME>
+
+```
+
+
+
+---
+
+## 🤖 Sim-to-Sim Verification (MuJoCo)
+
+The `Deploy` folder provides simple scripts to test your trained models (exported as ONNX policies) in a lightweight MuJoCo simulation. This is a crucial step to verify your policy's robustness before real-world deployment.
+
+```bash
+cd Deploy
+# For rough terrain testing
+python play_mujoco.py
+
+# For flat terrain testing
+python play_mujoco_flat.py
+
+```
+
+*(Ensure you have your trained `policy.onnx` correctly placed in the `policy/` directory and that MuJoCo is installed in your Python environment).*
+
+---
+
+## 💻 IDE Setup (VSCode)
+
+To enable intelligent code completion and module indexing in VSCode:
+
+1. Press `Ctrl+Shift+P` and select **`Tasks: Run Task`**.
+2. Run **`setup_python_env`** from the drop-down menu.
+3. When prompted, enter the absolute path to your Isaac Sim installation.
+
+This will generate a `.python.env` file in the `.vscode` directory containing the paths to all Omniverse and Isaac Sim extensions.
+
+### Setup as an Omniverse Extension (Optional)
+
+We provide an example UI extension (`source/go2/go2/ui_extension_example.py`) that loads inside Isaac Sim.
+
+1. Open Isaac Sim and go to `Window` -> `Extensions`.
+2. Click the **Gear/Hamburger Icon** -> `Settings`.
+3. Under **Extension Search Paths**, add the absolute path to the `source` directory of this repository.
+4. Refresh, search for your extension under the `Third Party` category, and toggle it to enable.
+
+---
+
+## 🧹 Code Formatting
+
+We use `pre-commit` to ensure consistent code styling. To set it up:
 
 ```bash
 pip install pre-commit
+pre-commit install
+
 ```
 
-Then you can run pre-commit with:
+To run formatting manually on all files:
 
 ```bash
 pre-commit run --all-files
+
 ```
 
-## Troubleshooting
+---
 
-### Pylance Missing Indexing of Extensions
+## 🐛 Troubleshooting
 
-In some VsCode versions, the indexing of part of the extensions is missing.
-In this case, add the path to your extension in `.vscode/settings.json` under the key `"python.analysis.extraPaths"`.
+### Pylance Cannot Correctly Resolve Python Code
 
-```json
-{
-    "python.analysis.extraPaths": [
-        "<path-to-ext-repo>/source/go2"
-    ]
-}
-```
+If VsCode's Pylance cannot find your modules, update the `pyproject.toml` file in the root directory to include your specific paths. Replace the paths below with the absolute paths on your machine:
 
-### Pylance Crash
+```toml
+[tool.pyright]
+include = ["source", "scripts"]
+exclude = [
+    "**/__pycache__",
+    "**/_isaac_sim",
+    "**/docs",
+    "**/logs",
+    ".git",
+    ".vscode",
+    "**/node_modules",  
+    "**/.*"            
+]
+extraPaths = [
+    # Replace with your actual project path
+    "/path/to/your/workplace/source/<your-project-name>",
+    
+    # Replace with your actual Isaac Lab path
+    "/path/to/IsaacLab/source/isaaclab", 
+    "/path/to/IsaacLab/source/isaaclab_assets",
+    "/path/to/IsaacLab/source/isaaclab_rl",
+    "/path/to/IsaacLab/source/isaaclab_tasks",
+    
+    # Add Omniverse python packages (replace with your conda env path)
+    "/path/to/miniconda3/envs/isaaclab/lib/python3.11/site-packages/extscache/omni.kit.*",
+    "/path/to/miniconda3/envs/isaaclab/lib/python3.11/site-packages/extscache/omni.graph.*",
+    "/path/to/miniconda3/envs/isaaclab/lib/python3.11/site-packages/extscache/omni.services.*"
+]
 
-If you encounter a crash in `pylance`, it is probable that too many files are indexed and you run out of memory.
-A possible solution is to exclude some of omniverse packages that are not used in your project.
-To do so, modify `.vscode/settings.json` and comment out packages under the key `"python.analysis.extraPaths"`
-Some examples of packages that can likely be excluded are:
-
-```json
-"<path-to-isaac-sim>/extscache/omni.anim.*"         // Animation packages
-"<path-to-isaac-sim>/extscache/omni.kit.*"          // Kit UI tools
-"<path-to-isaac-sim>/extscache/omni.graph.*"        // Graph UI tools
-"<path-to-isaac-sim>/extscache/omni.services.*"     // Services tools
-...
-```
